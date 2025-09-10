@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>مهام الوصول</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: #f5f5f5;
+      direction: rtl;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      margin: 30px 0;
+      color: #333;
+    }
+
+    #taskContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .task-card {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: right;
+      position: relative;
+    }
+
+    .task-card.done {
+      border-left: 6px solid #4caf50;
+      background: #e8f5e9;
+    }
+
+    .task-card.pending {
+      border-left: 6px solid #f44336;
+      background: #ffebee;
+    }
+
+    .task-card h3 {
+      margin: 0 0 10px;
+    }
+
+    .task-card button {
+      position: absolute;
+      left: 15px;
+      bottom: 15px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #2196f3;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 مهام الوصول</h1>
+  <div id="taskContainer"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyACC6BcByXF9xKbduEUm2c0fAZ-MGbTaso",
+      authDomain: "new-projcet-d08b8.firebaseapp.com",
+      databaseURL: "https://new-projcet-d08b8-default-rtdb.firebaseio.com",
+      projectId: "new-projcet-d08b8",
+      storageBucket: "new-projcet-d08b8.appspot.com",
+      messagingSenderId: "765474496777",
+      appId: "1:765474496777:web:a5b0d57aedd108c4baf3d8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // المهام الثابتة مرتبة حسب قائمتك
+    const orderedTasks = [
+      "تبليغ وصول الحافلات",
+      "اخذ التفويج من السائقين",
+      "تأكد من مطابقة البيانات",
+      "تقييم الحافلات",
+      "تبليغ وصول الرحلة",
+      "قراءة تأشيرة أول معتمر",
+      "قراءة تأشيرات المعتمرين",
+      "إغلاق الكشوفات",
+      "تسليم السائقين نموذج من إغلاق الكشوفات"
+    ];
+
+    // إرسال المهام إلى Firebase مرة واحدة
+    const tasksList = {};
+    orderedTasks.forEach(task => {
+      tasksList[task] = "pending";
+    });
+    db.ref("مهام الوصول").set(tasksList);
+
+    // عرض المهام بنفس الترتيب
+    const container = document.getElementById("taskContainer");
+
+    function renderTasks(snapshot) {
+      container.innerHTML = "";
+      const data = snapshot.val() || {};
+      orderedTasks.forEach(key => {
+        const status = data[key];
+        if (status !== undefined) {
+          const card = document.createElement("div");
+          card.className = `task-card ${status}`;
+          card.innerHTML = `
+            <h3>${key}</h3>
+            <p>الحالة: ${status === "done" ? "منجزة ✅" : "غير منجزة ❌"}</p>
+            <button onclick="toggleStatus('${key}', '${status}')">تغيير الحالة</button>
+          `;
+          container.appendChild(card);
+        }
+      });
+    }
+
+    function toggleStatus(key, currentStatus) {
+      const newStatus = currentStatus === "done" ? "pending" : "done";
+      db.ref("مهام الوصول/" + key).set(newStatus);
+    }
+
+    db.ref("مهام الوصول").on("value", renderTasks);
+  </script>
+</body>
+</html>
